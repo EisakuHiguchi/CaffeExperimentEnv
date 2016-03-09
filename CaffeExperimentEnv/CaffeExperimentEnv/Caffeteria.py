@@ -56,8 +56,11 @@ class prmGroup:
         self.panel.SetSizer(self.layout)
 
     def getValue(self, key):
-        temp = self.controls[key]
-        return temp.value
+        return self.controls[key].GetValue()
+
+    def reload(self):
+        for k, v in self.controls.items():
+            self.value[k] = v.Value
 
     def refresh(self):
         self.panel.SetSizer(self.layout)
@@ -88,12 +91,10 @@ class DirGroup:
         self.controls = self.getDirPanels()
 
     def getValue(self, key):
-        temp = self.controls[key]
-        return temp.value
+        return self.controls[key].GetValue()
 
     def setValue(self, key, val):
-        temp = self.controls[key]
-        temp.value = val
+        self.controls[key].SetValue(val)
 
     def refresh(self):
         self.panel.SetSizer(self.layout)
@@ -143,10 +144,10 @@ def replace(path, search, replace):
         os.rename(temp_file, path)
     return 0
 
-
 def editConfig():
     data = u"net: " + "\"" + os.path.join(dir_path, "quick_train_test.prototxt") + "\""
-    for k, v in prmdict.items():
+    prm_Controls.reload()
+    for k, v in prm_Controls.value.items():
         if k == "lr_policy":
             data = u"%s\n" %data \
                 + u"%s: \"" %k \
@@ -167,17 +168,13 @@ def editConfig():
     replace(dir_path + "/quick.prototxt", u"dim: w", u"dim: " + db_dict["width"])
     replace(dir_path + "/quick.prototxt", u"dim: h", u"dim: " + db_dict["height"])
     replace(dir_path + "/quick_train_test.prototxt", u"mean.binaryproto", os.path.join(dir_path, u"mean.binaryproto"))
-    replace(dir_path + "/quick_train_test.prototxt"
-            , u"train_leveldb"
-            , os.path.join(dir_path, u"train_leveldb"))
-    replace(dir_path + "/quick_train_test.prototxt"
-            , u"test_leveldb"
-            , os.path.join(dir_path, u"test_leveldb"))
+    replace(dir_path + "/quick_train_test.prototxt", u"train_leveldb", os.path.join(dir_path, u"train_leveldb"))
+    replace(dir_path + "/quick_train_test.prototxt", u"test_leveldb", os.path.join(dir_path, u"test_leveldb"))
 
 def startTime():
     global executeName
     today = datetime.datetime.today()
-    executeName = "caffeGUI_ver01_" + today.strftime("%Y%m%d_%H%M%S")
+    executeName = "caffeteria_" + today.strftime("%Y%m%d_%H%M%S")
     return executeName
 
 def createConfig(path):
@@ -187,9 +184,7 @@ def createConfig(path):
     p2 = "cp " + r"config/quick_train_test.prototxt" + " " + os.path.join(path, "quick_train_test.prototxt")
     print(p2)
     s.call(p2, shell = True)
-    # edit config
     editConfig()
-
 
 def createDir(dir):
     global dir_path
@@ -197,9 +192,7 @@ def createDir(dir):
     p = "mkdir " + dir_path
     s.call(p, shell=True) # exeption > if exit
     home_Panels[1].Value = dir_path
-    
     createConfig(dir_path)
-
 
 def createDB(type):
     if type == "LEVELDB" or type == "LMDB":
@@ -226,7 +219,6 @@ def createDB(type):
     else:
         wx.MessageBox("type: LEVELDB or LMDB")
 
-
 def createMean():
     p = "%s/compute_image_mean" %caffe_Panels[1].Value \
            + " -backend leveldb" \
@@ -234,7 +226,6 @@ def createMean():
            + " %s/mean.binaryproto" %dir_path # \\ mean path
     print(p)
     s.call(p, shell = True)
-
 
 def trainModel():
     p = "%s/caffe" %caffe_Panels[1].Value \
@@ -261,13 +252,10 @@ def click_button_1(event):
         createMean()
         trainModel()
 
-
 def click_openDialog(event):
     result = ""
-    # dir dialog
     if event.GetId() < 4:
-        dlg = wx.DirDialog(None,"Choose directory","",
-                       wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
+        dlg = wx.DirDialog(None,"Choose directory","", wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
     else:
         dlg = wx.FileDialog(None,"Choose file","", "","*.*")
 
@@ -276,7 +264,6 @@ def click_openDialog(event):
     dlg.Destroy()
 
     id = event.GetId()
-
     if id == 0: # home
         dir_Controls.setValue("home", result)
     elif id == 1: # image
@@ -290,13 +277,9 @@ def click_openDialog(event):
     elif id == 3: # dirPath
         dir_Controls.setValue("dirpath", result)
 
-
-
-
-
 if __name__ == "__main__":
     application = wx.App()
-    frame = wx.Frame(None, wx.ID_ANY, u"Caffeteria", size=(600,650))
+    frame = wx.Frame(None, wx.ID_ANY, u"Caffeteria", size=(600,580))
 
     panel = wx.Panel(frame, wx.ID_ANY)
     layout = wx.BoxSizer(wx.VERTICAL)

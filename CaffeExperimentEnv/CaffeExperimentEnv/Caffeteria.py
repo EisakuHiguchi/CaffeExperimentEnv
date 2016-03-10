@@ -188,31 +188,31 @@ def createConfig(path):
 
 def createDir(dir):
     global dir_path
-    dir_path = os.path.join(home_Panels[1].Value, dir)
+    dir_path = os.path.join(dir_Controls.getValue("home"), dir)
     p = "mkdir " + dir_path
     s.call(p, shell=True) # exeption > if exit
-    home_Panels[1].Value = dir_path
+    dir_Controls.setValue("home", dir_path)
     createConfig(dir_path)
 
 def createDB(type):
     if type == "LEVELDB" or type == "LMDB":
-        p1 = "%s/convert_imageset" %caffe_Panels[1].Value \
+        p1 = "%s/convert_imageset" %dir_Controls.getValue("caffe") \
                + " -shuffle" \
                + " -backend leveldb" \
-               + " -resize_height %s" %resize_Panels[0].Value \
-               + " -resize_width %s" %resize_Panels[1].Value \
-               + " %s/" %image_Panels[1].Value \
-               + " %s" %trainlist_Panels[1].Value \
+               + " -resize_height %s" %resize_Controls.getValue("height") \
+               + " -resize_width %s" %resize_Controls.getValue("width") \
+               + " %s/" %dir_Controls.getValue("image") \
+               + " %s" %dir_Controls.getValue("trainlist") \
                + " %s/train_leveldb" %dir_path
         print(p1)
         s.call(p1, shell = True)
-        p2 = "%s/convert_imageset" %caffe_Panels[1].Value \
+        p2 = "%s/convert_imageset" %dir_Controls.getValue("caffe") \
                + " -shuffle" \
                + " -backend leveldb" \
-               + " -resize_height %s" %resize_Panels[0].Value \
-               + " -resize_width %s" %resize_Panels[1].Value \
-               + " %s/" %image_Panels[1].Value \
-               + " %s" %testlist_Panels[1].Value \
+               + " -resize_height %s" %resize_Controls.getValue("height") \
+               + " -resize_width %s" %resize_Controls.getValue("width") \
+               + " %s/" %dir_Controls.getValue("image") \
+               + " %s" %dir_Controls.getValue("testlist") \
                + " %s/test_leveldb" %dir_path
         print(p2)
         s.call(p2, shell = True)
@@ -220,7 +220,7 @@ def createDB(type):
         wx.MessageBox("type: LEVELDB or LMDB")
 
 def createMean():
-    p = "%s/compute_image_mean" %caffe_Panels[1].Value \
+    p = "%s/compute_image_mean" %dir_Controls.getValue("caffe") \
            + " -backend leveldb" \
            + " %s/train_leveldb" %dir_path \
            + " %s/mean.binaryproto" %dir_path # \\ mean path
@@ -228,7 +228,7 @@ def createMean():
     s.call(p, shell = True)
 
 def trainModel():
-    p = "%s/caffe" %caffe_Panels[1].Value \
+    p = "%s/caffe" %dir_Controls.getValue("caffe") \
            + " train -solver" \
            + " %s/quick_solver.prototxt" %dir_path
     print(p)
@@ -236,7 +236,7 @@ def trainModel():
 
 def click_button_1(event):
     global dir_path
-    dir_path = dirPath_Panels[1].Value
+    dir_path = dir_Controls.getValue("dirpath")
     cmd = listbox.GetSelection()
     if cmd == 0: # createNewDir
         createDir(startTime())

@@ -2,6 +2,23 @@
 
 import re
 import subprocess as s
+import glob
+import os
+import shutil
+
+def getLog():
+    logpath = glob.glob("/tmp/caffe.*.*.log.INFO.*.*")
+    shutil.copyfile(logpath, "caffe.log")
+    os.remove(logpath)
+
+def getInterval():
+    loss = readlines("caffe.log", "test_iter:")
+    accuracy = readlines("caffe.log", "test_interval:")
+
+    loss = loss[0].replace("test_iter: ", "")
+    accuracy = accuracy[0].replace("test_interval:", "")
+
+    return {"loss":int(loss), "accuracy":int(accuracy)}
 
 
 def readlines(filename, str):
@@ -19,10 +36,15 @@ def convertLog(strlist, word, interval):
     result = ""
     cnt = 0
     for d in strlist:
-        data = re.findall(word + ' = .*', d)
-        for e in data:
-            result = result + str(interval*cnt) + ' ' + e.replace(word + ' = ', '') + '\n'
-            cnt = cnt + 1
+        if word == "loss":
+            data = re.findall('Iteration .*, loss = .*', d)
+            for e in data:
+                result = result + e.replace('Iteration ', '').replace(',', '').replace('loss = ', '') + '\n'
+        else:
+            data = re.findall(word + ' = .*', d)
+            for e in data:
+                result = result + str(interval*cnt) + ' ' + e.replace(word + ' = ', '') + '\n'
+        cnt = cnt + 1
 
     f = open("datatmp.txt","w")
     f.write(result)
@@ -39,5 +61,13 @@ def callGnu(word):
     
 def loadLog(filename, word):
     data = readlines(filename, word)
-    convertLog(data,word,500)
+    interval = getInterval()
+    convertLog(data,word,interval[word])
     callGnu(word)
+
+def createLogGraph(sw):
+    filename = "caffe.log"
+    if sw == 0: # accuracy
+        loadLog(filename, "accuracy")
+    elif sw == 1: # loss
+        loadLog(filename, "loss")

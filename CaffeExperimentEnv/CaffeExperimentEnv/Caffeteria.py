@@ -9,6 +9,8 @@ from stat import *
 import codecs
 from collections import OrderedDict
 
+import Analyze1
+
 executeName = u""
 dir_path = u""
 
@@ -233,6 +235,7 @@ def trainModel():
            + " %s/quick_solver.prototxt" %dir_path
     print(p)
     s.call(p, shell = True) # solver path
+    Analyze1.getLog(dir_path) # module Analyze
 
 def click_button_1(event):
     global dir_path
@@ -246,6 +249,10 @@ def click_button_1(event):
         createMean()
     elif cmd == 3: # trainModel
         trainModel()
+    elif cmd == 4: # Analyze loss
+        Analyze1.createLogGraph(dir_path, 1)
+    elif cmd == 5: # Analyze accuracy
+        Analyze1.createLogGraph(dir_path, 0)
     else: # all
         createDir(startTime())
         createDB("LEVELDB")
@@ -302,11 +309,13 @@ if __name__ == "__main__":
     exec_panel = wx.Panel(resize_Controls.panel, wx.ID_ANY)
     exec_layout = wx.BoxSizer(wx.HORIZONTAL)
     element_array = (
-        "createNewDir",
-        "createDataBase", 
-        "createMean", 
-        "trainModel",
-        "all")
+        "createNewDir", # cmd id = 0
+        "createDataBase", # cmd id = 1
+        "createMean", # 2
+        "trainModel", # 3
+        "Analyze loss", # 4
+        "Analyze accuracy", # 5
+        "all") # else
     listbox = wx.ListBox(exec_panel, wx.ID_ANY, choices=element_array, style=wx.LB_SINGLE)  
     exec_text = wx.StaticText(exec_panel, wx.ID_ANY, u"set ExecuteMode")
     exec_layout.Add(exec_text, flag = wx.EXPAND | wx.ALL, border = set_dir_border)
